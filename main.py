@@ -61,7 +61,7 @@ def main(date):
         if link != "731":
             Slides(link)
     dir = os.environ["DIRECTORY"]
-    print(f"Slides saved to `/{dir}`!")
+    print(f"Slides saved to /{dir}!")
 
 
 if __name__ == "__main__":

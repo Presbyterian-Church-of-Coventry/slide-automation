@@ -55,13 +55,13 @@ class Slides:
         if verse:
             self.verse = verse
             text = self.get_verse_text()
-            print("    " + self.title)
+            print("   - " + self.title)
             self.blank_slide()
             self.write_verses(text)
         if hymn:
             self.hymn_num = hymn
             text = self.get_hymn_text(str(hymn))
-            print("    " + self.title)
+            print("   - " + self.title)
             self.blank_slide()
             self.write_hymn(text)
 
@@ -121,7 +121,7 @@ class Slides:
         shift = 0
         psalm_dedication = False
         for verse in tqdm(text, leave=False):
-            lines = verse[1].rstrip().split("\n")
+            lines = verse[1].rstrip().replace("\n\n", "\n").split("\n")
             indent = 0
             if verse[0]:
                 if x > 1400:
@@ -146,7 +146,10 @@ class Slides:
                         indent = 3
                 else:
                     if len(str(verse[0])) == 2 or x < 10:
-                        shift += space + pad
+                        if len(str(verse[0])) == 2 and x < 10:
+                            shift += space
+                        else:
+                            shift += space + pad
                     else:
                         shift += space + pad * 2
                     x += shift
@@ -166,7 +169,6 @@ class Slides:
                             whitespace = False
                     x, y = self.write_lines(line.strip(), x, y, 90, indent)
                     x = 0
-                    # if y > 174:
                     y += 90
                     indent = 0
             else:
@@ -174,7 +176,6 @@ class Slides:
                 if psalm_dedication:
                     y += 90
                     x = 0
-                    psalm_dedication = False
         slide_num = get_slide_nums(dir)
         self.img.save(f"{dir}/Slide {slide_num}.png")
 
