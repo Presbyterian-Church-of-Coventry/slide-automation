@@ -256,8 +256,6 @@ class Slides:
                     y += 90
                 if num % 2:
                     slide_num = get_slide_nums(dir)
-                    self.img.save(f"{dir}/Slide {slide_num}.png")
-                    self.blank_slide()
                     y = 173
             if len(hymn) % 2:
                 slide_num = get_slide_nums(dir)
@@ -304,9 +302,11 @@ class Slides:
         for ref in soup.find_all("div", {"id": "text"}):
             verses = ref.findChildren("p")
             for verse in verses:
-                for line in str(verse).split("<br/>"):
+                for line in str(verse).replace("<br>", "<br/>").split("<br/>"):
+                    line = line.replace("<p></p>", "")
                     line = line.replace("</p>", "")
                     line = line.replace("<br/>", "")
+                    line = line.replace("</br>", "")
                     if line[:3] == "<p>" and line[3:][:1].isdigit():
                         if ref_true:
                             refrain = stanza
