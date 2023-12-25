@@ -62,8 +62,9 @@ class Slides:
             self.hymn_num = hymn
             text = self.get_hymn_text(str(hymn))
             print("   - " + self.title)
-            self.blank_slide()
-            self.write_hymn(text)
+            if len(text) > 0:
+                self.blank_slide()
+                self.write_hymn(text)
 
     def blank_slide(self):
         self.img = Image.new("RGB", (1920, 1080), color="white")
@@ -121,7 +122,15 @@ class Slides:
         shift = 0
         psalm_dedication = False
         for verse in tqdm(text, leave=False):
-            lines = verse[1].rstrip().replace("\n\n", "\n").split("\n")
+            raw = verse[1].rstrip().replace("\n\n", "\n").split("\n")
+            lines = []
+            for line in raw:
+                print(line)
+                if line == "    ":
+                    pass
+                else:
+                    lines.append(line)
+            print(lines)
             indent = 0
             if verse[0]:
                 if x > 1400:
@@ -216,9 +225,37 @@ class Slides:
         else:
             for num, stanza in enumerate(tqdm(hymn, leave=False)):
                 for line in stanza:
-                    self.draw.text((270, y), line, font=bold_font, fill="black")
-                    y += 76
-                y += 90
+                    if self.draw.textlength(line, bold_font) < 1530:
+                        self.draw.text((270, y), line, font=bold_font, fill="black")
+                        y += 76
+                    else:
+                        buffer = ""
+                        for word in line.split(" "):
+                            buffer += word + " "
+                            size = self.draw.textlength(buffer, bold_font)
+                            if size > 1530:
+                                self.draw.text(
+                                    (270, y),
+                                    (buffer[: -(len(word) + 1)]),
+                                    font=bold_font,
+                                    fill="black",
+                                )
+                                y += 76
+                                self.draw.text(
+                                    (270, y),
+                                    line[len(buffer[: -(len(word)) - 1]) :],
+                                    font=bold_font,
+                                    fill="black",
+                                )
+                                y += 76
+                                break
+                if y + 166 > 900:
+                    slide_num = get_slide_nums(dir)
+                    self.img.save(f"{dir}/Slide {slide_num}.png")
+                    self.blank_slide()
+                    y = 173
+                else:
+                    y += 90
                 if num % 2:
                     slide_num = get_slide_nums(dir)
                     self.img.save(f"{dir}/Slide {slide_num}.png")
@@ -249,6 +286,7 @@ class Slides:
                         verses.append((int(verse[:1]), verse[3:]))
                     except:
                         verses.append((None, verse.rstrip()))
+        print(verses)
         return verses
 
     def get_hymn_text(self, num):
@@ -294,7 +332,8 @@ class Slides:
                 for num, stave in enumerate(hymn):
                     stave.append("")
                     hymn[num] = stave + refrain
-        hymn.pop(0)
+        if len(hymn) > 0:
+            hymn.pop(0)
         return hymn
 
 
