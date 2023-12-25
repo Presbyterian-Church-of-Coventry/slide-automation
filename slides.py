@@ -1,5 +1,6 @@
 import os
 import requests
+from tqdm import tqdm
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 from PIL import Image, ImageFont, ImageDraw
@@ -39,20 +40,29 @@ bold_font = ImageFont.truetype("bold.ttf", size=72)
 small_font = ImageFont.truetype("bold.ttf", size=52)
 
 
-class Group:
-    def __init__(self, title, verse=None, hymn=None):
-        self.title = title
+class Slides:
+    def __init__(self, ref):
         self.verse = None
         self.hymn_num = None
+        self.title = None
+        hymn = None
+        verse = None
+        try:
+            int(ref)
+            hymn = ref
+        except:
+            verse = ref
         if verse:
             self.verse = verse
-            self.blank_slide()
             text = self.get_verse_text()
+            print("    " + self.title)
+            self.blank_slide()
             self.write_verses(text)
         if hymn:
             self.hymn_num = hymn
-            self.blank_slide()
             text = self.get_hymn_text(str(hymn))
+            print("    " + self.title)
+            self.blank_slide()
             self.write_hymn(text)
 
     def blank_slide(self):
@@ -110,7 +120,7 @@ class Group:
         lined = False
         shift = 0
         psalm_dedication = False
-        for verse in text:
+        for verse in tqdm(text, leave=False):
             lines = verse[1].rstrip().split("\n")
             indent = 0
             if verse[0]:
@@ -165,17 +175,14 @@ class Group:
                     y += 90
                     x = 0
                     psalm_dedication = False
-        if not lined:
-            slide_num = get_slide_nums(dir)
-            self.img.save(f"{dir}/Slide {slide_num}.png")
+        slide_num = get_slide_nums(dir)
+        self.img.save(f"{dir}/Slide {slide_num}.png")
 
     def write_hymn(self, hymn):
         y = 173
-        x = 0
-        buffer = ""
         dir = "slides"
         if len(hymn[0]) > 4:
-            for stanza in hymn:
+            for stanza in tqdm(hymn, leave=False):
                 for line in stanza:
                     if self.draw.textlength(line, bold_font) < 1530:
                         self.draw.text((270, y), line, font=bold_font, fill="black")
@@ -185,8 +192,7 @@ class Group:
                 self.blank_slide()
                 y = 173
         else:
-            for num, stanza in enumerate(hymn):
-                print(num)
+            for num, stanza in enumerate(tqdm(hymn, leave=False)):
                 for line in stanza:
                     self.draw.text((270, y), line, font=bold_font, fill="black")
                     y += 76
@@ -196,9 +202,10 @@ class Group:
                     self.img.save(f"{dir}/Slide {slide_num}.png")
                     self.blank_slide()
                     y = 173
-            slide_num = get_slide_nums(dir)
-            self.img.save(f"{dir}/Slide {slide_num}.png")
-            self.blank_slide()
+            if len(hymn) % 2:
+                slide_num = get_slide_nums(dir)
+                self.img.save(f"{dir}/Slide {slide_num}.png")
+                self.blank_slide()
 
     def get_verse_text(self):
         token = os.environ["ESV_API_TOKEN"]
@@ -208,7 +215,9 @@ class Group:
             f"https://api.esv.org/v3/passage/text/?q={self.verse}&include-footnote-body=false&include-footnotes=false&include-headings=false&include-passage-references=false",
             headers=headers,
         )
-        text = resp.json()["passages"][0][:-6]
+        json = resp.json()
+        self.title = json["canonical"]
+        text = json["passages"][0][:-6]
         for verse in text.split("["):
             if len(verse.strip()) > 1:
                 try:
@@ -230,6 +239,11 @@ class Group:
         hymn = []
         refrain = None
         ref_true = False
+        title = soup.find("h2", {"class": "hymntitle"}).text
+        if title:
+            self.title = title
+        else:
+            self.title = self.hymn_num
         for ref in soup.find_all("div", {"id": "text"}):
             verses = ref.findChildren("p")
             for verse in verses:
@@ -264,6 +278,3 @@ class Group:
 
 for file in os.listdir("slides"):
     os.remove("slides/" + file)
-Group("445. Bring Them In", None, 35)
-Group("Psalm 1:1-5", "Psalm 2:1-15", None)
-Group("Psalm 1:1-5", "Daniel 2:1-15", None)
