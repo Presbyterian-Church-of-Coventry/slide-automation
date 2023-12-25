@@ -125,12 +125,10 @@ class Slides:
             raw = verse[1].rstrip().replace("\n\n", "\n").split("\n")
             lines = []
             for line in raw:
-                print(line)
                 if line == "    ":
                     pass
                 else:
                     lines.append(line)
-            print(lines)
             indent = 0
             if verse[0]:
                 if x > 1400:
@@ -286,7 +284,6 @@ class Slides:
                         verses.append((int(verse[:1]), verse[3:]))
                     except:
                         verses.append((None, verse.rstrip()))
-        print(verses)
         return verses
 
     def get_hymn_text(self, num):
