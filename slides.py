@@ -188,6 +188,27 @@ class Slides:
                     if self.draw.textlength(line, bold_font) < 1530:
                         self.draw.text((270, y), line, font=bold_font, fill="black")
                         y += 76
+                    else:
+                        buffer = ""
+                        for word in line.split(" "):
+                            buffer += word + " "
+                            size = self.draw.textlength(buffer, bold_font)
+                            if size > 1530:
+                                self.draw.text(
+                                    (270, y),
+                                    (buffer[: -(len(word) + 1)]),
+                                    font=bold_font,
+                                    fill="black",
+                                )
+                                y += 76
+                                self.draw.text(
+                                    (270, y),
+                                    line[len(buffer[: -(len(word)) - 1]) :],
+                                    font=bold_font,
+                                    fill="black",
+                                )
+                                y += 76
+                                break
                 slide_num = get_slide_nums(dir)
                 self.img.save(f"{dir}/Slide {slide_num}.png")
                 self.blank_slide()
@@ -263,7 +284,7 @@ class Slides:
                         ref_true = True
                         hymn.append(stanza)
                         stanza = []
-                    elif "[Refrain]" in line:
+                    elif "[Refrain]" in line or "(Refrain)" in line:
                         stanza.append(line[2:][:-10])
                     else:
                         if len(line) > 1 and line[:7] != "<p><div":
