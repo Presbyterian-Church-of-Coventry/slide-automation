@@ -89,6 +89,11 @@ class Group:
                 y += step
                 last = 0
                 buffer = word + " "
+                if max_size == 1000:
+                    slide_num = get_slide_nums(dir)
+                    self.img.save(f"{dir}/Slide {slide_num}.png")
+                    self.blank_slide()
+                    y = 173
         self.draw.text(
             (270 + last, y), (" " * indent + buffer[:-1]), font=bold_font, fill="black"
         )
@@ -103,27 +108,42 @@ class Group:
         y = 173
         x = 0
         lined = False
+        shift = 0
         psalm_dedication = False
         for verse in text:
             lines = verse[1].rstrip().split("\n")
             indent = 0
             if verse[0]:
-                if x > 1500:
+                if x > 1400:
                     y += 76
                     x = 0
+                space = self.draw.textlength(str(verse[0]), small_font)
+                pad = 15
+                left = 0
+                if x > 10:
+                    left = pad
                 self.draw.text(
-                    (270 + x, y - 7),
+                    (270 + x + left, y - 7),
                     str(verse[0]),
                     font=small_font,
                     fill="dimgray",
                 )
-                space = self.draw.textlength(str(verse[0]), small_font) + 10
-                x += space
-                indent = 1 + round(space / 36)
+                shift = 0
+                if len(lines) > 1:
+                    if len(str(verse[0])) == 2:
+                        indent = 4
+                    else:
+                        indent = 3
+                else:
+                    if len(str(verse[0])) == 2 or x < 10:
+                        shift += space + pad
+                    else:
+                        shift += space + pad * 2
+                    x += shift
             else:
                 psalm_dedication = True
             if len(lines) > 1:
-                x -= space
+                x -= shift
                 lined = True
                 for line in lines:
                     whitespace = True
@@ -150,9 +170,9 @@ class Group:
             self.img.save(f"{dir}/Slide {slide_num}.png")
 
     def write_hymn(self, hymn):
-        text = ""
         y = 173
-        lines = 1
+        x = 0
+        buffer = ""
         dir = "slides"
         if len(hymn[0]) > 4:
             for stanza in hymn:
@@ -165,7 +185,20 @@ class Group:
                 self.blank_slide()
                 y = 173
         else:
-            pass
+            for num, stanza in enumerate(hymn):
+                print(num)
+                for line in stanza:
+                    self.draw.text((270, y), line, font=bold_font, fill="black")
+                    y += 76
+                y += 90
+                if num % 2:
+                    slide_num = get_slide_nums(dir)
+                    self.img.save(f"{dir}/Slide {slide_num}.png")
+                    self.blank_slide()
+                    y = 173
+            slide_num = get_slide_nums(dir)
+            self.img.save(f"{dir}/Slide {slide_num}.png")
+            self.blank_slide()
 
     def get_verse_text(self):
         token = os.environ["ESV_API_TOKEN"]
@@ -231,5 +264,6 @@ class Group:
 
 for file in os.listdir("slides"):
     os.remove("slides/" + file)
-# Group("445. Bring Them In", None, 499)
+Group("445. Bring Them In", None, 35)
+Group("Psalm 1:1-5", "Psalm 2:1-15", None)
 Group("Psalm 1:1-5", "Daniel 2:1-15", None)
