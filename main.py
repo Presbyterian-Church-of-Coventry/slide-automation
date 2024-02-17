@@ -51,10 +51,14 @@ def main(date):
             object = annotation.get_object()
             if "/URI" in object["/A"].keys():
                 link = object["/A"]["/URI"]
-                if link.split("/")[-1]:
-                    links.append(link.split("/")[-1])
+                if "hymnary.org" in link or "esv.org" in link:
+                    if not "/page/" in link:
+                        if link.split("/")[-1]:
+                            links.append(link.split("/")[-1])
+                        else:
+                            links.append(link.split("/")[-2])
                 else:
-                    links.append(link.split("/")[-2])
+                    print("Unrecognized link in the bulletin, you may need to create slides for this content manually")
     os.remove(pdf_path)
     print(f"Generating slides for {date}...")
     for link in links:
