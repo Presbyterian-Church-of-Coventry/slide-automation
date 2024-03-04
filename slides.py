@@ -58,13 +58,18 @@ class Slides:
             print("   - " + self.title)
             self.blank_slide()
             self.write_verses(text)
-        if hymn:
+        elif hymn:
             self.hymn_num = hymn
             text = self.get_hymn_text(str(hymn))
             print("   - " + self.title)
             if len(text) > 0:
                 self.blank_slide()
                 self.write_hymn(text)
+            else:
+                print("error -- this hymn is not available on hymnary.org, possibly due to copyright restrictions")
+                print("WARNING -- you are going to need to create this one by hand, skipping")
+        else:
+            print("error - something went wrong, neither scripture nor hymn?")
 
     def blank_slide(self):
         self.img = Image.new("RGB", (1920, 1080), color="white")
