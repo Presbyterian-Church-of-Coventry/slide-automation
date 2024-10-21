@@ -14,9 +14,9 @@ def main(date):
     bulletins = json["data"]["bulletins"]["edges"]
     # Grab bulletin for specific date:
     for bulletin in bulletins:
-        link = bulletin["node"]["url"]
-        if date in link:
-            pdf_url = link
+        name = bulletin["node"]["title"]
+        if date in name:
+            pdf_url = bulletin["node"]["url"]
             break
     if not pdf_url:
         num = 2
@@ -31,15 +31,18 @@ def main(date):
             bulletins = json["data"]["bulletins"]["edges"]
             # Grab bulletin for specific date:
             for bulletin in bulletins:
-                link = bulletin["node"]["url"]
-                if date in link:
-                    pdf_url = link
+                name = bulletin["node"]["title"]
+                if date in name:
+                    pdf_url = bulletin["node"]["url"]
                     break
             num += 1
-    # Download selected bulletin locally:
-    pdf = requests.get(pdf_url)
-    pdf_path = str(pdf_url[-23:])
-    open(pdf_path, "wb").write(pdf.content)
+    # Download the PDF file from Google Drive
+    file_id = pdf_url.split('/')[-2]
+    download_url = f"https://drive.google.com/uc?id={file_id}"
+    response = requests.get(download_url)
+    pdf_path = f"{file_id}.pdf"
+    with open(pdf_path, "wb") as file:
+        file.write(response.content)
     PDFFile = open(pdf_path, "rb")
     PDF = PdfReader(PDFFile)
     links = []
