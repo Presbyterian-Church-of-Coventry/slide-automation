@@ -1,9 +1,13 @@
 import os
+import sys
+import time
+import re
 import requests
 from tqdm import tqdm
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 from PIL import Image, ImageFont, ImageDraw
+
 
 load_dotenv()
 
@@ -289,11 +293,41 @@ class Slides:
                         verses.append((None, verse.rstrip()))
         return verses
 
+    def get_hymn_with_flaresolverr(self, url, proxy="http://localhost:8191/v1", session="hymnary", tries=4, wait=4):
+        """
+        At some point, the hymnary.org web server started blocking scripted http GET requests
+        using a bunny.net challenge. This work-around uses the FlareSolverr proxy server to
+        masquerade as a web browser on behalf of a script.
+        """
+        for i in range(tries):
+            payload = {
+                "cmd": "request.get",
+                "url": url,
+                "session": "hymnary",
+                "headers": [
+                    {"name": "User-Agent", "value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
+                                                    "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Safari/605.1.15"},
+                    {"name": "Accept", "value": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"},
+                    {"name": "Accept-Language", "value": "en-US,en;q=0.9"}
+                           ],
+                "maxTimeout": 80000
+            }
+            response = requests.post(proxy, json=payload, timeout=90)
+            response.raise_for_status()
+            sol = (response.json().get("solution") or {})
+            status = int(sol.get("status") or 0)
+            html = sol.get("response") or ""
+            if status < 400 and not re.search(r"(bunny\.net|Establishing a secure connection|Challenge loading)", html, re.I):
+                return html
+            if i < tries:
+                time.sleep(wait)
+        raise SystemExit(f"Still seeing a challenge after {tries} tries (status {status}).")
+
     def get_hymn_text(self, num):
         cookie = {f"license_{hymnal}_{num}_1": "yes"}
         url = f"https://hymnary.org/hymn/{hymnal}/{num}"
-        link = requests.get(url, cookies=cookie)
-        html = str(link.text)
+        #link = requests.get(url, cookies=cookie)
+        html = self.get_hymn_with_flaresolverr(url)
         soup = BeautifulSoup(html, "html.parser")
         stanza = []
         hymn = []

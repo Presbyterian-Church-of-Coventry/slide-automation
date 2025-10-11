@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 import os
 import re
 from pypdf import PdfReader
@@ -45,6 +46,9 @@ def main(date):
     pdf_path = f"{file_id}.pdf"
     with open(pdf_path, "wb") as file:
         file.write(response.content)
+    return process_pdf(pdf_path)
+
+def process_pdf(pdf_path):
     PDFFile = open(pdf_path, "rb")
     PDF = PdfReader(PDFFile)
     links = []
@@ -80,6 +84,10 @@ if __name__ == "__main__":
         resp = re.match("\d{4}-\d{2}-\d{2}", ans)
         if resp:
             date = resp[0]
+        elif os.path.isfile(ans.rstrip()):
+            print("directly processing bulletin pdf", ans.rstrip())
+            process_pdf(ans.rstrip())
+            sys.exit(0)
         else:
             print()
             print("Please enter a valid date!")
