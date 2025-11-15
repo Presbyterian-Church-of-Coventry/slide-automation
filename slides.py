@@ -359,10 +359,10 @@ class Slides:
                         hymn.append(stanza)
                         stanza = []
                     elif "[Refrain]" in line or "(Refrain)" in line:
-                        stanza.append(line[2:][:-10])
+                        stanza.append(line[1:][:-10])
                     else:
                         if len(line) > 1 and line[:7] != "<p><div":
-                            stanza.append(line[2:])
+                            stanza.append(line[1:])
             hymn.append(stanza)
             if refrain:
                 for num, stave in enumerate(hymn):
